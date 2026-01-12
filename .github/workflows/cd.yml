@@ -1,4 +1,4 @@
-name: CD - Deploy to DigitalOcean
+name: CD - Deploy to DigitalOcean (sha)
 
 on:
   workflow_run:
@@ -10,7 +10,7 @@ jobs:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     steps:
-      - name: Deploy over SSH (pull + restart)
+      - name: Deploy SHA over SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.DO_HOST }}
@@ -20,6 +20,20 @@ jobs:
           script: |
             set -e
             cd ~/apps/node-gha-docker
+
+            # SHA corto del commit que disparó el CI
+            SHA="${{ github.event.workflow_run.head_sha }}"
+            TAG="${SHA:0:7}"
+
+            echo "Deploying tag: $TAG"
+
+            # actualizar .env con el tag a desplegar
+            if [ -f .env ]; then
+              sed -i "s/^IMAGE_TAG=.*/IMAGE_TAG=$TAG/" .env
+            else
+              echo "IMAGE_TAG=$TAG" > .env
+            fi
+
             docker compose pull
             docker compose up -d
             docker image prune -f
