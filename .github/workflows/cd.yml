@@ -1,0 +1,26 @@
+name: CD - Deploy to DigitalOcean
+
+on:
+  workflow_run:
+    workflows: ["CI - Build & Push Docker image"]
+    types: [completed]
+
+jobs:
+  deploy:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy over SSH (pull + restart)
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.DO_HOST }}
+          username: ${{ secrets.DO_USER }}
+          key: ${{ secrets.DO_SSH_KEY }}
+          port: ${{ secrets.DO_SSH_PORT || 22 }}
+          script: |
+            set -e
+            cd ~/apps/node-gha-docker
+            docker compose pull
+            docker compose up -d
+            docker image prune -f
+            docker ps
