@@ -6,7 +6,7 @@ const PORT = process.env.PORT || 3000;
 app.get('/', (req, res) => {
   res.json({
     ok: true,
-    message: 'Hello from Node + Docker + GitHub Actions!',
+    message: 'Hello from Node + Docker + GitHub Actions! NEW TEST!!',
     timestamp: new Date().toISOString(),
   });
 });
